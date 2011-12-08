@@ -1,0 +1,15 @@
+Changes
+FindLib.pm
+MANIFEST
+Makefile.PL
+inc/MyTest.pm
+t/FindMe.pm
+t/basic.t
+t/init/.exists
+t/simple.t
+t/sub/SubFind.pm
+t/sub/dir/module.pm
+t/sub/dir/script
+t/sub/dir/subScript
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

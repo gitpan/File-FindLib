@@ -1,0 +1,2 @@
+use File::FindLib 'SubFind.pm';
+print $SubFind::VERSION, $/;
