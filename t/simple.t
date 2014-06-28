@@ -7,7 +7,7 @@ use File::Spec::Functions   qw< rel2abs >;
 BEGIN {
     MyTest->import( qw< plan skip Okay SkipIf Lives Dies > );
     plan(
-        tests => 5,
+        tests => 6,
         # todo => [ 2, 3 ],
     );
 }
@@ -41,9 +41,13 @@ if(
         }
     }
 ) {
-    chomp( $v= qx( $^X -Mblib $t/init/link 2>&1 ) );
-    Okay( $VER, $v, "Found right version from t/init/link" );
+    my( $v, $l )= qx( $^X -Mblib $t/init/link 2>&1 );
+    chomp
+        for $v, $l;
+    Okay( $VER,  $v, "Found right version from t/init/link" );
+    Okay( '1 1', $l, "Sub::Find loaded once" );
 } else {
+    skip( 'No symlinks' );
     skip( 'No symlinks' );
 }
 

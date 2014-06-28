@@ -7,7 +7,7 @@ t/FindMe.pm
 t/basic.t
 t/init/.exists
 t/simple.t
-t/sub/SubFind.pm
+t/sub/Sub/Find.pm
 t/sub/dir/module.pm
 t/sub/dir/script
 t/sub/dir/subScript

@@ -11,13 +11,6 @@ BEGIN {
 }
 
 $|= 1;
-#for my $base (  '', '../'  ) {
-#    if(  -d $base.'blib/arch'  ||  -d $base.'blib/lib'  ) {
-#        require lib;
-#        lib->import( $base.'blib/arch', $base.'blib/lib' );
-#        last;
-#    }
-#}
 
 return 1;
 
@@ -77,52 +70,3 @@ sub Dies {
     }
     goto &SkipIf;
 }
-
-#sub Warns(\&;$@) {
-#    my( $sub, $desc, @omen )= @_;
-#    if(  ! $desc  ) {
-#        my( $pkg, $file, $line )= caller();
-#        ++$line;
-#        $desc= "$file line $line";
-#    }
-#    my @warn;
-#    local( $SIG{__WARN__} )= sub { push @warn, $_[0] };
-#    if(  ! @omen  ) {
-#        @_= (
-#            Okay( 0, 0+@warn, "Warnings from: $desc" );
-#            '', $warn[0], "First warning from: $desc",
-#        );
-#        goto &SkipIf;
-#    } else {
-#        if(  ! @warn  ) {
-#            Okay( 0+@omen, 0+@warn, "Warnings from: $desc" );
-#            for my $omen (  @omen  ) {
-#                skip( "Did not warn: $omen" );
-#            }
-#            skip( "Did not warn" );
-#        } else {
-#            Okay( 0+@omen, 0+@warn, "Warnings from: $desc" );
-#            my @okay= (0) x @warn;
-#            for my $omen (  @omen  ) {
-#                my $okay= 0;
-#                my $i= 0;
-#                for my $warn (  @warn  ) {
-#                    my $match;
-#                    if(  'Regexp' eq ref $omen  ) {
-#                        $match= $warn =~ $omen;
-#                    } else {
-#                        $match= $warn eq $omen;
-#                    }
-#                    if(  $match  ) {
-#                        $okay[$i]++;
-#                        $okay++;
-#                    }
-#                    $i++;
-#                }
-#                Okay( 0, ! $okay, "Warnings matching $omen: $okay" );
-#            }
-#            my( $i )= grep( 0 == $_, @okay );
-#            Okay( 0, 0+grep( 0 == $_, @okay ), "Unmatched warning: $warn[$i]" );
-#        }
-#    }
-#}

@@ -4,7 +4,7 @@
       "Tye McQueen"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.59, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.141170",
    "license" : [
       "unknown"
    ],
@@ -22,23 +22,23 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "runtime" : {
          "requires" : {
-            "File::Basename" : 0,
-            "File::Spec::Functions" : 0,
-            "strict" : 0,
-            "vars" : 0
+            "File::Basename" : "0",
+            "File::Spec::Functions" : "0",
+            "strict" : "0",
+            "vars" : "0"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.001001"
+   "version" : "0.001002"
 }

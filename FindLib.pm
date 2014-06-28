@@ -2,19 +2,16 @@ package File::FindLib;
 use strict;
 
 use File::Basename          qw< dirname >;
-use File::Spec::Functions   qw< rel2abs catdir >;
+use File::Spec::Functions   qw< rel2abs catdir splitdir >;
 
 use vars                    qw< $VERSION >;
 
 my $Pkg= __PACKAGE__;   # Our class name (convenient to use in messages)
 BEGIN {
-    $VERSION = 0.001_001;
-#    local( $^W )= 0;
-#    die "Upgrade to Perl 5.006 or newer as $Pkg requires the 'our' keyword"
-#        if  ! eval 'our $x; 1';
+    $VERSION= 0.001_002;
 }
 
-return 1;   # No run-time code below; just subs and maybe BEGIN blocks
+return 1;   # No run-time code below; just 'sub's and maybe BEGIN blocks
 
 
 sub import {
@@ -55,13 +52,46 @@ sub LookUp {
                 lib->import( $path );
                 return $path;
             }
-            return require $path;
+            my $ret= require $path;
+            UpdateInc( $path );
+            return $ret;
         }
         my $up= dirname( $dir );
         die "$Pkg can't find $find in ancestor directory of $from.\n"
             if  $up eq $dir;
         $dir= $up;
     }
+}
+
+
+# Set $INC{'My/Mod.pm'} after loading 'lib/My/Mod.pm';
+# so "use File::FindLib 'lib/Mod.pm'; use Mod;" doesn't load it twice.
+
+sub UpdateInc {
+    my( $path )= @_;    # Path to module file.
+    my $base= $path;    # Path minus ".pm"; parts that go into package name.
+    return 0            # If no .pm on end, "use Bareword" wouldn't find it.
+        if  $base !~ s/[.]pm$//;
+    my @parts= grep length $_, splitdir( $base );   # Potential pkg name parts.
+    my @names;              # Above minus leading parts that aren't barewords.
+    unshift @names, pop @parts              # Include last part until find...
+        while  @parts  &&  $parts[0] =~ /^\w+$/;    # ...a non-bareword.
+ EDGE:
+    for my $o ( 0 .. $#names ) {    # Strip shortest prefix that leaves a pkg.
+        next            # "use Foo::123" works but "use 123::Foo" wouldn't.
+            if  $names[$o] =~ /^[0-9]/;
+        my $stab= \%main::;
+        my @pkg= @names[ $o..$#names ];
+        for my $name ( @pkg ) {         # Defined package? No autovivification.
+            $stab= $stab->{$name.'::'};
+            next EDGE
+                if  ! $stab  ||  'GLOB' ne ref \$stab;
+        }
+        my $mod= join '/', @pkg;        # @INC always uses '/'; no catdir()
+        $INC{"$mod.pm"} ||= $INC{$path};
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -82,9 +112,10 @@ Or
 =head1 DESCRIPTION
 
 File::FindLib starts in the directory where your script (or library) is
-located and looks for the named file or directory.  If it isn't found, then
-it looks in the parent directory and continues moving up parent directories
-until it finds it or until there is not another parent directory.
+located and looks for the file or directory whose name you pass in.  If it
+isn't found, then FindLib looks in the parent directory and continues moving
+up parent directories until it finds it or until there is not another parent
+directory.
 
 If it finds the named path and it is a directory, then it prepends it to
 C<@INC>.  That is,
@@ -96,11 +127,11 @@ is roughly equivalent to:
     use File::Basename qw< dirname >;
     use lib dirname(__FILE__) . '/../../../lib';
 
-except you don't have to know how many '../' to include and it adjusts
+except you don't have to know how many '../'s to include and it adjusts
 if __FILE__ is a symbolic link.
 
 If it finds the named path and it is a file, then it loads the Perl code
-stored that file.  That is,
+stored in that file.  That is,
 
     use File::FindLib 'lib/MyCorp/Setup.pm';
 
@@ -111,10 +142,10 @@ is roughly equivalent to:
         require dirname(__FILE__) . '/../../../lib/MyCorp/Setup.pm';
     }
 
-except you don't have to know how many '../' to include (and it adjusts if
+except you don't have to know how many '../'s to include (and it adjusts if
 __FILE__ is a symbolic link).
 
-=head1 MOTIVATION
+=head2 MOTIVATION
 
 It is common to have a software product that gets deployed as a tree
 of directories containing commands (scripts) and/or test scripts in
@@ -173,7 +204,7 @@ where TestEnv.pm might start with:
 And you don't have to worry about having to update a script if it gets
 moved to a different point in the deployment directory tree.
 
-=head1 SYMBOLIC LINKS
+=head2 SYMBOLIC LINKS
 
 If the calling script/library was loaded via a symbolic link (if
 C<-l __FILE__> is true inside the calling code), then File::FindLib will
@@ -198,13 +229,18 @@ And the following command produces the following output:
     use File::FindLib 'lib/Setup.pm';
     $
 
-Then File::FindLib will search for:
+Then File::FindLib will do:
 
-    /site/mycorp/widget/bin/lib/Setup.pm
-    /site/mycorp/widget/lib/Setup.pm
-    /site/mycorp/lib/Setup.pm
-    /site/lib/Setup.pm
-    /lib/Setup.pm
+    See that it was called from /etc/init.d/widget.
+    See that this is a symbolic link.
+    Act like it was called from /site/mycorp/widget/bin/init-main.
+    (Ignore that this is another symbolic link.)
+    Search for:
+        /site/mycorp/widget/bin/lib/Setup.pm
+        /site/mycorp/widget/lib/Setup.pm
+        /site/mycorp/lib/Setup.pm
+        /site/lib/Setup.pm
+        /lib/Setup.pm
 
 Only the first symbolic link that we mentioned is noticed.
 
@@ -225,8 +261,43 @@ If you instead made a hard link:
 then /etc/init.d/widget would also be a symbolic link to
 /site/mycorp/widget/bin/init-main which would surely work better.
 
-So future versions of File::FindLib may notice more cases of symbolic links
-or provide options for controlling which symbolic links to notice.
+So future versions of File::FindLib may notice more cases of symbolic
+links or provide options for controlling which symbolic links to notice.
+
+=head2 %INC
+
+The code:
+
+    use File::FindLib 'lib/MyCorp/Setup.pm';
+
+is more accurately approximated as:
+
+    use File::Basename qw< dirname >;
+    BEGIN {
+        my $path= dirname(__FILE__) . '/../../../lib/MyCorp/Setup.pm';
+        require $path;
+        $INC{'MyCorp/Setup.pm'} ||= $INC{$path};
+    }
+
+The setting of C<$INC{'MyCorp/Setup.pm'}> is so that:
+
+    use File::FindLib 'lib/MyCorp/Setup.pm';
+    ...
+    use MyCorp::Setup;
+
+doesn't try to load the MyCorp::Setup module twice.
+
+Though, this is only done if lib/MyCorp/Setup.pm defines a MyCorp::Setup
+package... and C<$INC{'MyCorp/Setup.pm'}> isn't already set and there is
+no lib::MyCorp::Setup package defined.  See the source code if you have
+to know every detail of the heuristics used, though misfires are unlikely
+(especially since module names are usually capitalized while library
+subdirectory names usually are not).
+
+Even this problem case is unlikely and the consequences of loading the same
+module twice are often just harmless warnings, if that.
+
+So this detail will not matter most of the time.
 
 =head1 PLANS
 
