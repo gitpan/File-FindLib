@@ -1,5 +1,8 @@
 Revision history for Perl extension File::FindLib
 
+0.001_003   2014-07-26
+  - Add (un)license
+
 0.001_002   2014-06-28
   - Prevent double-loading of modules.
 

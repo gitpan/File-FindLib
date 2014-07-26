@@ -8,7 +8,7 @@ use vars                    qw< $VERSION >;
 
 my $Pkg= __PACKAGE__;   # Our class name (convenient to use in messages)
 BEGIN {
-    $VERSION= 0.001_002;
+    $VERSION= 0.001_003;
 }
 
 return 1;   # No run-time code below; just 'sub's and maybe BEGIN blocks

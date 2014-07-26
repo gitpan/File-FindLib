@@ -8,7 +8,7 @@ configure_requires:
   ExtUtils::MakeMaker: '0'
 dynamic_config: 1
 generated_by: 'ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.141170'
-license: unknown
+license: unrestricted
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: '1.4'
@@ -22,4 +22,4 @@ requires:
   File::Spec::Functions: '0'
   strict: '0'
   vars: '0'
-version: '0.001002'
+version: '0.001003'
