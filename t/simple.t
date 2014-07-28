@@ -20,18 +20,30 @@ Dies(
     'Fails when path not found',
 );
 
+sub maybe_david {
+    our $David;
+    $David = 1
+        if  @_ && $_[0] =~ s/^Using \S+\n//;
+    return $David;
+}
+
 my $VER= $File::FindLib::VERSION;
 my $t= rel2abs( dirname(__FILE__) );
 my $v;
 
 chomp( $v= qx( $^X -Mblib $t/sub/dir/script 2>&1 ) );
+maybe_david( $v );
 Okay( $VER, $v, "Found right version from t/sub/dir/script" );
 
 chomp( $v= qx( $^X -Mblib -e "require '$t/sub/dir/module.pm'" 2>&1 ) );
+maybe_david( $v );
 Okay( $VER, $v, "Found right version from t/sub/dir/module.pm" );
 
 unlink( "$t/init/link" );
-if(
+if( maybe_david() ) {
+    skip( 'smoke tester inserting extra output' )
+        for 1,2;
+} elsif(
     eval {
         if(  ! symlink( "../sub/dir/subScript", "$t/init/link" )  ) {
             warn "# symlink: $!\n";
@@ -47,8 +59,8 @@ if(
     Okay( $VER,  $v, "Found right version from t/init/link" );
     Okay( '1 1', $l, "Sub::Find loaded once" );
 } else {
-    skip( 'No symlinks' );
-    skip( 'No symlinks' );
+    skip( 'No symlinks' )
+        for 1,2;
 }
 
 # TODO:
